@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FarmFun Mini App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1e3a8a; /* Blue ocean background */
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      background-color: #2b6cb0; /* Lighter blue ocean shade */
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 1em;
+      color: #ffffff;
+      background-color: #3b82f6; /* Blue ocean button color */
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2563eb; /* Darker blue on hover */
+    }
+    #walletStatus {
+      margin-top: 10px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk@latest/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/wagmi/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
+  <script>
+    const { sdk } = window.FarcasterMiniAppSDK;
+    const { http, createConfig, injected, metaMask } = window.wagmi;
+    const { ethers } = window;
+
+    const config = createConfig({
+      chains: [{ id: 8453, name: 'Base Mainnet' }],
+      connectors: [injected(), metaMask()],
+      transports: { [8453]: http() }
+    });
+
+    async function connectWallet() {
+      try {
+        const provider = await sdk.wallet.getEthereumProvider();
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        const accounts = await ethersProvider.listAccounts();
+        if (accounts.length > 0) {
+          document.getElementById('walletStatus').textContent = `Connected: ${accounts[0]}`;
+          return ethersProvider;
+        } else {
+          throw new Error('No accounts found');
+        }
+      } catch (error) {
+        console.error('Wallet connection failed:', error);
+        document.getElementById('walletStatus').textContent = 'Please connect a wallet (Farcaster or MetaMask)';
+      }
+    }
+
+    async function mintTokens() {
+      const provider = await connectWallet();
+      if (!provider) return;
+
+      const signer = provider.getSigner();
+      const contractAddress = '0xFc874ddbEffd695135c238E9165263d60c00eD43';
+      const abi = [
+        "function mint() public",
+        "function balanceOf(address account) view returns (uint256)",
+        "function userInfo(address _user) view returns (uint256[] memory)"
+      ];
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+
+      try {
+        const tx = await contract.mint();
+        await tx.wait();
+        const balance = await contract.balanceOf(await signer.getAddress());
+        alert(`Mint successful! New balance: ${ethers.utils.formatEther(balance)} $FARM`);
+      } catch (error) {
+        console.error('Minting failed:', error);
+        alert('Minting failed. Check console for details.');
+      }
+    }
+
+    async function buyTokenSwap() {
+      const provider = await connectWallet();
+      if (!provider) return;
+
+      // Simulate buy/swap (replace with actual swap logic or DEX integration)
+      alert('Buy/Swap functionality is a placeholder. Integrate with a DEX like Uniswap for real transactions.');
+    }
+
+    // Initialize SDK and connect wallet on load
+    window.addEventListener('load', async () => {
+      await sdk.actions.ready();
+      await connectWallet();
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>FarmFun</h1>
+    <p>Mint your $FARM token</p>
+    <button onclick="mintTokens()">Mint</button>
+    <button onclick="buyTokenSwap()">Buy Token/Swap</button>
+    <div id="walletStatus">Connecting...</div>
+  </div>
+</body>
+</html>
