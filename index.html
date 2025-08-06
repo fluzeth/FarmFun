@@ -8,7 +8,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #1e3a8a; /* Blue ocean background */
+      background-color: #1e3a8a;
       color: #ffffff;
       display: flex;
       justify-content: center;
@@ -19,7 +19,7 @@
     .container {
       text-align: center;
       padding: 20px;
-      background-color: #2b6cb0; /* Lighter blue ocean shade */
+      background-color: #2b6cb0;
       border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
@@ -32,14 +32,14 @@
       margin: 10px;
       font-size: 1em;
       color: #ffffff;
-      background-color: #3b82f6; /* Blue ocean button color */
+      background-color: #3b82f6;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       transition: background-color 0.3s;
     }
     button:hover {
-      background-color: #2563eb; /* Darker blue on hover */
+      background-color: #2563eb;
     }
     #walletStatus {
       margin-top: 10px;
@@ -52,6 +52,8 @@
     const { sdk } = window.FarcasterMiniAppSDK;
     const { http, createConfig, injected, metaMask } = window.wagmi;
     const { ethers } = window;
+
+    let provider = null;
 
     const config = createConfig({
       chains: [{ id: 8453, name: 'Base Mainnet' }],
@@ -72,14 +74,15 @@
         }
       } catch (error) {
         console.error('Wallet connection failed:', error);
-        document.getElementById('walletStatus').textContent = 'Please connect a wallet (Farcaster or MetaMask)';
+        document.getElementById('walletStatus').textContent = 'Not connected. Click to connect wallet.';
       }
     }
 
     async function mintTokens() {
-      const provider = await connectWallet();
-      if (!provider) return;
-
+      if (!provider) {
+        alert('Please connect your wallet first!');
+        return;
+      }
       const signer = provider.getSigner();
       const contractAddress = '0xFc874ddbEffd695135c238E9165263d60c00eD43';
       const abi = [
@@ -101,17 +104,17 @@
     }
 
     async function buyTokenSwap() {
-      const provider = await connectWallet();
-      if (!provider) return;
-
-      // Simulate buy/swap (replace with actual swap logic or DEX integration)
+      if (!provider) {
+        alert('Please connect your wallet first!');
+        return;
+      }
       alert('Buy/Swap functionality is a placeholder. Integrate with a DEX like Uniswap for real transactions.');
     }
 
-    // Initialize SDK and connect wallet on load
+    // Tambah tombol konek wallet
     window.addEventListener('load', async () => {
       await sdk.actions.ready();
-      await connectWallet();
+      document.getElementById('walletStatus').innerHTML = '<button onclick="connectWallet()">Connect Wallet</button>';
     });
   </script>
 </head>
@@ -121,7 +124,7 @@
     <p>Mint your $FARM token</p>
     <button onclick="mintTokens()">Mint</button>
     <button onclick="buyTokenSwap()">Buy Token/Swap</button>
-    <div id="walletStatus">Connecting...</div>
+    <div id="walletStatus"></div>
   </div>
 </body>
 </html>
